@@ -1,31 +1,58 @@
-CROSS_COMPILER_DIR = ../ARM_Toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-linux-gnueabihf/bin
-COMPILE_DIR = Projects/GPIO
-BUILD_DIR = $(COMPILE_DIR)/Build
+CROSS_COMPILER_DIR := ../ARM_Toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-linux-gnueabihf/bin
 
-BOARD = beagleboneblack
+COMPILE_DIR := Projects/GPIO
+SRC_DIR := $(COMPILE_DIR)/src
+BUILD_DIR := $(COMPILE_DIR)/Build
 
-COMPILE_CMD = $(CROSS_COMPILER_DIR)/arm-none-linux-gnueabihf-gcc
-COMPILE_FLAGS = -Wall -Werror -O2
-LINKER_FLAGS = -lpthread
+TARGET := main
+
+BOARD := beagleboneblack
+
+CC := $(CROSS_COMPILER_DIR)/arm-none-linux-gnueabihf-gcc
+
+CFLAGS := -Wall -Werror -O2
+LDFLAGS := -lpthread
+
+BBB_IP := 192.168.7.2
+BBB_USER := root
+BBB_DEPLOY_DIR := /root
+
+# SSH options for BBB: skip host-key verification (BBB regenerates keys on
+# every boot) and force RSA host key to avoid ed25519 signing issues on ARM32.
+SSH_OPTS := -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAcceptedAlgorithms=+ssh-rsa
+
+SRC := $(SRC_DIR)/main.c
+
+OUTPUT := $(BUILD_DIR)/$(TARGET)
+
+.PHONY: help build clean deploy run
 
 help:
-	@echo Usage: make [build, clean] [COMPILE_DIR=...] [BOARD=...]
-	@echo   build       - Build the selected application
-	@echo   clean       - Remove build directory
+	@echo "Usage: make [build|clean|deploy|run]"
+	@echo ""
+	@echo " build   - Build application"
+	@echo " clean   - Remove build directory"
+	@echo " deploy  - Copy executable to BBB"
+	@echo " run     - Build + deploy + run on BBB"
 
-build: $(BUILD_DIR)/main
-$(BUILD_DIR)/main: $(COMPILE_DIR)/src/main.c
+build: $(OUTPUT)
+
+$(OUTPUT): $(SRC)
 	@mkdir -p $(BUILD_DIR)
-	$(COMPILE_CMD) $(COMPILE_FLAGS) $< -o $@ $(LINKER_FLAGS)
-	@echo Built: $@
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
+	@echo "Built: $@"
 
 clean:
-	$(RM) $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
+	@echo "Cleaned: $(BUILD_DIR)"
 
-ifeq ($(OS),Windows_NT)
-	RM = del /Q
-else
-	RM = rm -rf
-endif
-	@echo Cleaned: $(BUILD_DIR)
+deploy: build
+	scp $(SSH_OPTS) $(OUTPUT) $(BBB_USER)@$(BBB_IP):$(BBB_DEPLOY_DIR)/
+	@echo "Deployed to BBB"
 
+run: deploy
+	ssh $(SSH_OPTS) $(BBB_USER)@$(BBB_IP) "$(BBB_DEPLOY_DIR)/$(TARGET)"
+	@echo "Executed on BBB"

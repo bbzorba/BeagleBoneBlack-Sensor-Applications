@@ -1,0 +1,17 @@
+1. The extlinux.conf is using uImage as the kernel format
+2. U-Boot's extlinux/syslinux boot uses bootz (for zImage format), not bootm (for uImage format)
+3. This causes "zimage: Bad magic!" because U-Boot tries to boot the uImage as if it were a zImage
+4. After extlinux fails, U-Boot tries other methods and eventually tries TFTP/network which causes the timeout and data abort reset loop
+
+There are two issues:
+1. Format mismatch: The extlinux.conf uses KERNEL /payload/uImage but U-Boot's extlinux handler uses bootz for ARM.
+2. uImage requires bootm. 
+
+The fix is to either:
+1. Use a zImage instead (change the kernel building/copying to use zImage)
+2. use LINUX directive instead of KERNEL in extlinux.conf (some U-Boot versions handle this differently)
+
+The core bug: bootz fails on uImage. Fix: use zImage.
+The build script already builds uImage. To also get zImage, just add it to the make line.
+The extlinux.conf points to /payload/uImage. Fix: change to /payload/zImage.
+The copy script needs to copy zImage to ${BOOT_DIR}/payload/.
