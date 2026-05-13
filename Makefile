@@ -17,11 +17,14 @@ BBB_IP := 192.168.7.2
 BBB_USER := root
 BBB_DEPLOY_DIR := /root
 
-# SSH options for BBB: skip host-key verification (BBB regenerates keys on
-# every boot) and force RSA host key to avoid ed25519 signing issues on ARM32.
+# SSH options for BBB:
+#  - Skip host-key verification (BBB regenerates keys on every boot)
+#  - Exclude sntrup761x25519 KEX: crashes sshd on ARM32 Cortex-A8
+#  - Allow ssh-rsa host key and user-key algorithms (OpenSSH 9 defaults exclude them)
 SSH_OPTS := -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
-            -o HostKeyAlgorithms=+ssh-rsa \
+            -o KexAlgorithms=curve25519-sha256,ecdh-sha2-nistp256,ecdh-sha2-nistp384,diffie-hellman-group14-sha256 \
+            -o HostKeyAlgorithms=rsa-sha2-512,rsa-sha2-256,ssh-rsa \
             -o PubkeyAcceptedAlgorithms=+ssh-rsa
 
 SRC := $(SRC_DIR)/main.c
