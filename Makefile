@@ -1,8 +1,8 @@
 # Detect OS
 ifeq ($(OS),Windows_NT)
     # Windows: Paths use backslashes, executables have .exe
-    CROSS_COMPILER_DIR := ../ARM_Toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-linux-gnueabihf/bin
-    CC := $(CROSS_COMPILER_DIR)/arm-none-linux-gnueabihf-gcc.exe
+    CROSS_COMPILER_DIR := C:/Program_Files/Arm_Toolchains/Arm_GNU_Toolchain_arm-none-linux-gnueabihf/14.2_rel1/bin
+	CC := $(CROSS_COMPILER_DIR)/arm-none-linux-gnueabihf-gcc.exe
     RM_CMD := rm -rf
 else
     # Linux: Paths use forward slashes
@@ -11,8 +11,8 @@ else
     RM_CMD := rm -rf
 endif
 
-COMPILE_DIR := Projects/GPIO
-SRC_DIR := $(COMPILE_DIR)/src
+COMPILE_DIR := Projects/LED_Control
+SRC_DIR := $(COMPILE_DIR)
 BUILD_DIR := $(COMPILE_DIR)/Build
 TARGET := main
 
