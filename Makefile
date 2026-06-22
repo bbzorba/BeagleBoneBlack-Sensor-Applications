@@ -11,9 +11,11 @@ else
     RM_CMD := rm -rf
 endif
 
+#COMPILE_DIR := Projects/LED_Control_2
 COMPILE_DIR := Projects/LED_Control
-SRC_DIR := $(COMPILE_DIR)
-BUILD_DIR := $(COMPILE_DIR)/Build
+
+SRC_DIR := $(COMPILE_DIR)/src
+BUILD_DIR := $(COMPILE_DIR)/build
 TARGET := main
 
 CFLAGS := -Wall -Werror -O2
